@@ -12,7 +12,24 @@ class SmokeRecordManager {
       records = List<Map<String, dynamic>>.from(json.decode(recordsJson));
     }
     records.add(record);
+    print(records);
     await prefs.setString(_keySmokeRecords, json.encode(records));
+  }
+
+  static Future<void> removeLastSmokeRecord() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? recordsJson = prefs.getString(_keySmokeRecords);
+    if (recordsJson != null) {
+      List<Map<String, dynamic>> records =
+          List<Map<String, dynamic>>.from(json.decode(recordsJson));
+
+      if (records.isNotEmpty) {
+        records.removeLast(); // 가장 최근의 기록을 제거
+        await prefs.setString(_keySmokeRecords, json.encode(records));
+      }
+
+      print(records);
+    }
   }
 
   static Future<List<Map<String, dynamic>>> getSmokeRecords() async {

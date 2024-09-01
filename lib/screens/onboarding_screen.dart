@@ -20,10 +20,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('프로필 설정'),
-        backgroundColor: const Color(0xFF2F80ED),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:quit_smoke/screens/home_screen.dart';
-// import 'package:quit_smoke/screens/statistics_screen.dart';
-import 'package:quit_smoke/screens/community_screen.dart';
+import 'package:quit_smoke/screens/welcome_screen.dart';
+import 'package:quit_smoke/screens/onboarding_screen.dart';
 import 'package:quit_smoke/theme/app_theme.dart';
-// import 'package:quit_smoke/screens/profile_screen.dart';
+import 'package:quit_smoke/utils/user_preferences.dart';
 
-// main.dart
 void main() {
-  runApp(MaterialApp(
-    theme: ThemeData(
-      primaryColor: AppTheme.primaryColor,
-      scaffoldBackgroundColor: AppTheme.backgroundColor,
-    ),
-    home: const MainScreen(),
-  ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -24,35 +17,94 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '절연 앱',
       theme: ThemeData(
-        primaryColor: const Color(0xFF3182F6),
-        scaffoldBackgroundColor: Colors.white,
+        primaryColor: AppTheme.primaryColor,
+        scaffoldBackgroundColor: AppTheme.backgroundColor,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: AppTheme.cardColor,
           elevation: 0,
-          iconTheme: IconThemeData(color: Color(0xFF3182F6)),
+          iconTheme: IconThemeData(color: AppTheme.primaryColor),
           titleTextStyle: TextStyle(
-            color: Colors.black,
+            color: AppTheme.textColor,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         textTheme: const TextTheme(
           titleLarge: TextStyle(
-            color: Colors.black,
+            color: AppTheme.textColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
           bodyLarge: TextStyle(
-            color: Colors.black87,
+            color: AppTheme.textColor,
             fontSize: 16,
           ),
           bodyMedium: TextStyle(
-            color: Colors.black54,
+            color: AppTheme.subtleTextColor,
             fontSize: 14,
           ),
         ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: AppTheme.cardColor, // 배경색상 설정
+          selectedItemColor: AppTheme.primaryColor,
+          unselectedItemColor: AppTheme.subtleTextColor,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.accentColor,
+            foregroundColor: AppTheme.textColor,
+            textStyle: const TextStyle(fontSize: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+        ),
+        cardColor: AppTheme.cardColor,
+        iconTheme: const IconThemeData(color: AppTheme.primaryColor),
       ),
-      home: const MainScreen(),
+      home: const InitialScreen(),
+    );
+  }
+}
+
+class InitialScreen extends StatefulWidget {
+  const InitialScreen({super.key});
+
+  @override
+  _InitialScreenState createState() => _InitialScreenState();
+}
+
+class _InitialScreenState extends State<InitialScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _navigateToNextScreen();
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    final userProfile = await UserPreferences.getUserProfile();
+    final hasSeenWelcomeScreen = await UserPreferences.hasSeenWelcomeScreen();
+
+    Widget nextScreen;
+
+    if (!hasSeenWelcomeScreen) {
+      nextScreen = const WelcomeScreen();
+    } else if (userProfile == null) {
+      nextScreen = const OnboardingScreen();
+    } else {
+      nextScreen = const MainScreen();
+    }
+
+    // Navigate to the determined screen
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => nextScreen),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+          child:
+              CircularProgressIndicator()), // Show a loading indicator while deciding
     );
   }
 }
@@ -69,7 +121,7 @@ class _MainScreenState extends State<MainScreen> {
   static final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
     // StatisticsScreen(),
-    const CommunityScreen(),
+    // const CommunityScreen(),
     // ProfileScreen(),
   ];
 
@@ -105,8 +157,9 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: const Color(0xFF3182F6),
-        unselectedItemColor: Colors.grey,
+        backgroundColor: AppTheme.cardColor, // 배경색상 설정
+        selectedItemColor: AppTheme.primaryColor,
+        unselectedItemColor: AppTheme.subtleTextColor,
         onTap: _onItemTapped,
       ),
     );

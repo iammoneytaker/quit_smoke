@@ -38,8 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final profile = await UserPreferences.getUserProfile();
     final todayCount = await SmokeRecordManager.getTodayCount();
     final lastSmoke = await SmokeRecordManager.getLastSmokeTime();
-    final message =
-        MotivationMessages.getRandomMessage(profile?['nickname'] ?? '사용자');
+    final message = await MotivationMessages.getRandomMessage(
+        profile?['nickname'] ?? '사용자');
 
     setState(() {
       _todayCount = todayCount;
@@ -74,11 +74,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _todayCount = newCount;
         if (change > 0) {
           _lastSmokeTime = DateTime.now();
+          SmokeRecordManager.addSmokeRecord({
+            'timestamp': DateTime.now().toIso8601String(),
+            'count': change,
+          });
+        } else if (change < 0 && _todayCount >= 0) {
+          // 흡연 기록에서 가장 최근 기록을 제거
+          SmokeRecordManager.removeLastSmokeRecord();
         }
-      });
-      await SmokeRecordManager.addSmokeRecord({
-        'timestamp': DateTime.now().toIso8601String(),
-        'count': change,
       });
       _updateTimeSinceLastSmoke();
     }
