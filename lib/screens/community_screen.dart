@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:quit_smoke/utils/user_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quit_smoke/theme/app_theme.dart';
 
@@ -10,26 +13,70 @@ class CommunityScreen extends StatefulWidget {
 }
 
 class _CommunityScreenState extends State<CommunityScreen> {
-  final TextEditingController _postController = TextEditingController();
-  final TextEditingController _commentController = TextEditingController();
-  final List<Map<String, dynamic>> _posts = [];
-  int _currentPage = 1;
-  final int _postsPerPage = 10;
-  bool _isLoading = false;
-  final bool _hasMore = true;
+  final TextEditingController _messageController = TextEditingController();
+  List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
+  late final StreamSubscription<List<Map<String, dynamic>>>
+      _messagesSubscription;
+
+  Timer? _debounce;
+  bool _isSending = false;
+
+  final int _limit = 20;
+  int _offset = 0;
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int? _replyToId;
+  final Map<int, bool> _expandedReplies = {};
 
   @override
   void initState() {
     super.initState();
-    _loadPosts();
+    _loadMessages();
+    _subscribeToMessages();
     _scrollController.addListener(_scrollListener);
+  }
+
+  void _subscribeToMessages() {
+    _messagesSubscription = Supabase.instance.client
+        .from('messages')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .execute()
+        .map((event) => event.map((e) => e).toList())
+        .listen((messages) {
+          setState(() {
+            _messages = _groupMessages(messages);
+          });
+        });
+  }
+
+  List<Map<String, dynamic>> _groupMessages(
+      List<Map<String, dynamic>> messages) {
+    final Map<int, Map<String, dynamic>> groupedMessages = {};
+    print(messages);
+    for (var message in messages) {
+      if (message['parent_id'] == null) {
+        groupedMessages[message['id']] = {...message, 'replies': []};
+      } else {
+        final parentId = message['parent_id'] as int;
+        if (groupedMessages.containsKey(parentId)) {
+          print('Parent ID: $parentId, Reply: $message');
+          groupedMessages[parentId]!['replies'].add(message);
+        }
+      }
+    }
+    return groupedMessages.values.toList()
+      ..sort((a, b) =>
+          (b['created_at'] as String).compareTo(a['created_at'] as String));
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
+    _messagesSubscription.cancel();
+    _messageController.dispose();
     super.dispose();
   }
 
@@ -37,60 +84,45 @@ class _CommunityScreenState extends State<CommunityScreen> {
     if (_scrollController.offset >=
             _scrollController.position.maxScrollExtent &&
         !_scrollController.position.outOfRange) {
-      if (!_isLoading && _hasMore) {
-        _loadPosts();
-      }
+      _loadMessages();
     }
   }
 
-  Future<void> _loadPosts() async {
-    if (_isLoading) return;
+  Future<void> _loadMessages() async {
+    if (_isLoading || !_hasMore) return;
     setState(() {
       _isLoading = true;
     });
 
-    final supabase = Supabase.instance.client;
-    final subscription =
-        supabase.from('messages').on(SupabaseEventTypes.all, (payload) {
+    try {
+      final response = await Supabase.instance.client
+          .from('messages')
+          .select('*, replies:messages!parent_id(*)')
+          .is_('parent_id', null)
+          .order('created_at', ascending: false)
+          .range(_offset, _offset + _limit - 1)
+          .execute();
+
+      if (response.data != null) {
+        final List<Map<String, dynamic>> newMessages =
+            List<Map<String, dynamic>>.from(response.data);
+        setState(() {
+          if (_offset == 0) {
+            _messages = _groupMessages(newMessages);
+          } else {
+            _messages.addAll(_groupMessages(newMessages));
+          }
+          _offset += newMessages.length;
+          _hasMore = newMessages.length == _limit;
+        });
+      }
+    } catch (e) {
+      print('Error loading messages: $e');
+    } finally {
       setState(() {
-        _postController.add(payload.newRecord);
+        _isLoading = false;
       });
-    }).subscribe();
-
-    // Handle subscription cancellation when the widget is disposed
-    @override
-    void dispose() {
-      supabase.removeSubscription(subscription);
-      super.dispose();
     }
-
-    // try {
-    //   final response = await Supabase.instance.client
-    //       .from('posts')
-    //       .select('*, comments(*)')
-    //       .order('created_at', ascending: false)
-    //       .range((_currentPage - 1) * _postsPerPage,
-    //           _currentPage * _postsPerPage - 1)
-    //       .execute();
-
-    //   if (response.data != null) {
-    //     setState(() {
-    //       if (_currentPage == 1) {
-    //         _posts = List<Map<String, dynamic>>.from(response.data);
-    //       } else {
-    //         _posts.addAll(List<Map<String, dynamic>>.from(response.data));
-    //       }
-    //       _currentPage++;
-    //       _hasMore = response.data.length == _postsPerPage;
-    //     });
-    //   }
-    // } catch (e) {
-    //   print('Error loading posts: $e');
-    // } finally {
-    //   setState(() {
-    //     _isLoading = false;
-    //   });
-    // }
   }
 
   @override
@@ -106,10 +138,10 @@ class _CommunityScreenState extends State<CommunityScreen> {
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
-              itemCount: _posts.length + (_hasMore ? 1 : 0),
+              itemCount: _messages.length + (_hasMore ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index < _posts.length) {
-                  return _buildPostItem(_posts[index]);
+                if (index < _messages.length) {
+                  return _buildMessageItem(_messages[index]);
                 } else if (_hasMore) {
                   return const Center(child: CircularProgressIndicator());
                 } else {
@@ -118,13 +150,17 @@ class _CommunityScreenState extends State<CommunityScreen> {
               },
             ),
           ),
-          _buildPostInput(),
+          _buildMessageInput(),
         ],
       ),
     );
   }
 
-  Widget _buildPostItem(Map<String, dynamic> post) {
+  Widget _buildMessageItem(Map<String, dynamic> message) {
+    final replies = (message['replies'] as List<dynamic>?) ?? [];
+    final isExpanded = _expandedReplies[message['id'] as int] ?? false;
+    final visibleReplies = isExpanded ? replies : replies.take(2).toList();
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       color: AppTheme.cardColor,
@@ -134,74 +170,102 @@ class _CommunityScreenState extends State<CommunityScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              post['content'],
+              '${message['nickname'] ?? 'Anonymous'}#${message['user_id']?.toString().substring(0, 4) ?? ''}',
+              style: const TextStyle(
+                color: AppTheme.primaryColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message['content'] ?? '',
               style: const TextStyle(color: AppTheme.textColor, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              DateTime.parse(post['created_at']).toString().split('.')[0],
+              DateTime.parse(
+                      message['created_at'] ?? DateTime.now().toIso8601String())
+                  .toString()
+                  .split('.')[0],
               style: const TextStyle(
-                  color: AppTheme.subtleTextColor, fontSize: 12),
+                color: AppTheme.subtleTextColor,
+                fontSize: 12,
+              ),
             ),
-            const SizedBox(height: 16),
-            _buildCommentSection(post),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => _replyToMessage(
+                  message['nickname'] ?? 'Anonymous',
+                  message['user_id'] ?? '',
+                  message['id']),
+              child: const Text('답글 달기'),
+            ),
+            if (replies.isNotEmpty) ...[
+              const Divider(),
+              ...visibleReplies.map((reply) => _buildReplyItem(reply)),
+              if (replies.length > 2)
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _expandedReplies[message['id'] as int] = !isExpanded;
+                    });
+                  },
+                  child: Text(
+                      isExpanded ? '답글 접기' : '답글 ${replies.length - 2}개 더 보기'),
+                ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCommentSection(Map<String, dynamic> post) {
-    List<dynamic> comments = post['comments'] ?? [];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('댓글 (${comments.length})',
-            style: const TextStyle(
-                color: AppTheme.textColor, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        ...comments.map((comment) => _buildCommentItem(comment)),
-        _buildCommentInput(post['id']),
-      ],
-    );
-  }
-
-  Widget _buildCommentItem(Map<String, dynamic> comment) {
+  Widget _buildReplyItem(Map<String, dynamic> reply) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        comment['content'],
-        style: const TextStyle(color: AppTheme.textColor, fontSize: 14),
+      padding: const EdgeInsets.only(left: 16, top: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${reply['nickname'] ?? 'Anonymous'}#${reply['user_id']?.toString().substring(0, 4) ?? ''}',
+            style: const TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            reply['content'] ?? '',
+            style: const TextStyle(color: AppTheme.textColor, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            DateTime.parse(
+                    reply['created_at'] ?? DateTime.now().toIso8601String())
+                .toString()
+                .split('.')[0],
+            style: const TextStyle(
+              color: AppTheme.subtleTextColor,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildCommentInput(int postId) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: _commentController,
-            decoration: InputDecoration(
-              hintText: '댓글 입력',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              filled: true,
-              fillColor: AppTheme.backgroundColor,
-            ),
-            style: const TextStyle(color: AppTheme.textColor),
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.send, color: AppTheme.primaryColor),
-          onPressed: () => _submitComment(postId),
-        ),
-      ],
-    );
+  void _replyToMessage(String nickname, String userId, int parentId) {
+    setState(() {
+      _messageController.text = '@$nickname#${userId.substring(0, 4)} ';
+      _messageController.selection = TextSelection.fromPosition(
+          TextPosition(offset: _messageController.text.length));
+      _replyToId = parentId;
+    });
   }
 
-  Widget _buildPostInput() {
+  Widget _buildMessageInput() {
     return Container(
       padding: const EdgeInsets.all(8),
       color: AppTheme.cardColor,
@@ -209,9 +273,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
         children: [
           Expanded(
             child: TextField(
-              controller: _postController,
+              controller: _messageController,
               decoration: InputDecoration(
-                hintText: '내용 입력',
+                hintText: '메시지 입력',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -223,46 +287,72 @@ class _CommunityScreenState extends State<CommunityScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.send, color: AppTheme.primaryColor),
-            onPressed: _submitPost,
+            onPressed: _sendMessage,
           ),
         ],
       ),
     );
   }
 
-  void _submitPost() async {
-    if (_postController.text.isNotEmpty) {
-      print(Supabase.instance.client.auth.currentUser);
-      try {
-        final response = await Supabase.instance.client.from('posts').insert({
-          'user_id': Supabase.instance.client.auth.currentUser!.id,
-          'content': _postController.text,
-          'created_at': DateTime.now().toIso8601String(),
-        }).execute();
-      } catch (e) {
-        print('Exception while submitting post: $e');
-        // Show error message to user
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('게시물 작성 중 오류가 발생했습니다: 잠시 후 다시 시도해주세요.')),
-        );
+  void _sendMessage() {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (!_isSending && _messageController.text.isNotEmpty) {
+        _isSending = true;
+        _performSend().then((_) {
+          _isSending = false;
+        });
       }
-    }
+    });
   }
 
-  void _submitComment(int postId) async {
-    if (_commentController.text.isNotEmpty) {
+  Future<void> _performSend() async {
+    if (_messageController.text.isNotEmpty) {
       try {
-        await Supabase.instance.client.from('comments').insert({
-          'post_id': postId,
-          'user_id': Supabase.instance.client.auth.currentUser!.id,
-          'content': _commentController.text,
-        }).execute();
-        _commentController.clear();
-        _currentPage = 1;
-        _posts.clear();
-        _loadPosts();
+        final userProfile = await UserPreferences.getUserProfile();
+        final nickname = userProfile?['nickname'] ?? 'Anonymous';
+        final userId = await UserPreferences.getUserId();
+
+        final messageData = {
+          'content': _messageController.text,
+          'created_at': DateTime.now().toIso8601String(),
+          'nickname': nickname,
+          'user_id': userId,
+          'parent_id': _replyToId,
+        };
+
+        final response = await Supabase.instance.client
+            .from('messages')
+            .insert(messageData)
+            .execute();
+
+        if (response.data != null) {
+          final newMessage = response.data![0] as Map<String, dynamic>;
+          setState(() {
+            if (_replyToId != null) {
+              final parentIndex =
+                  _messages.indexWhere((m) => m['id'] == _replyToId);
+              if (parentIndex != -1) {
+                _messages[parentIndex]['replies'] = [
+                  newMessage,
+                  ...(_messages[parentIndex]['replies'] as List)
+                ];
+              }
+            } else {
+              _messages.insert(0, {...newMessage, 'replies': []});
+            }
+          });
+        }
+
+        _messageController.clear();
+        setState(() {
+          _replyToId = null;
+        });
       } catch (e) {
-        print('Error submitting comment: $e');
+        print('메시지 전송 중 오류 발생: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('메시지 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')),
+        );
       }
     }
   }

@@ -210,22 +210,39 @@ class DailyChart extends StatelessWidget {
           TableRow(
             children: [
               _buildTableCell('$i시 - ${i + 1}시'),
-              _buildTableCell('${todayData[i].y.toInt()}개비'),
+              _buildTableCell(
+                '${todayData[i].y.toInt()}개비',
+                isHighlighted: todayData[i].y.toInt() >=
+                    1, // Highlight cells with value >= 1
+              ),
             ],
           ),
       ],
     );
   }
 
-  Widget _buildTableCell(String text, {bool isHeader = false}) {
+  Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    bool isHighlighted =
+        false, // Add a flag to indicate if the cell should be highlighted
+  }) {
     return Container(
       padding: const EdgeInsets.all(8),
-      color: isHeader ? AppTheme.primaryColor : AppTheme.cardColor,
+      color: isHeader
+          ? AppTheme.primaryColor
+          : isHighlighted
+              ? AppTheme.cardEmphasisColor // Highlighted cell color
+              : AppTheme.cardColor, // Default cell color
       child: Text(
         text,
         style: TextStyle(
           color: isHeader ? AppTheme.backgroundColor : AppTheme.textColor,
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isHeader
+              ? FontWeight.bold
+              : isHighlighted
+                  ? FontWeight.bold // Highlighted cell color
+                  : FontWeight.normal,
         ),
         textAlign: TextAlign.center,
       ),

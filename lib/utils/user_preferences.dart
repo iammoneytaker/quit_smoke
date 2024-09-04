@@ -1,5 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
+
+import 'package:uuid/uuid.dart';
 
 class UserPreferences {
   static const String _keyUserProfile = 'user_profile';
@@ -9,10 +12,19 @@ class UserPreferences {
   static Future<void> saveUserProfile(Map<String, dynamic> userProfile) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUserProfile, json.encode(userProfile));
+
+    final userId = await getUserId();
+    final nickname = userProfile['nickname'];
+
+    await Supabase.instance.client.from('users').upsert({
+      'id': userId,
+      'nickname': nickname,
+    });
   }
 
   static Future<Map<String, dynamic>?> getUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
+
     final userProfileString = prefs.getString(_keyUserProfile);
     if (userProfileString != null) {
       return json.decode(userProfileString) as Map<String, dynamic>;
@@ -58,5 +70,17 @@ class UserPreferences {
     final prefs = await SharedPreferences.getInstance();
     String startDate = DateTime.now().toIso8601String();
     await prefs.setString(_keyStartDate, startDate);
+  }
+
+  static Future<String> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? userId = prefs.getString('user_id');
+
+    if (userId == null) {
+      userId = const Uuid().v4();
+      await prefs.setString('user_id', userId);
+    }
+
+    return userId;
   }
 }
