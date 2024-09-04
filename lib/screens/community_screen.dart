@@ -16,8 +16,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
   final TextEditingController _messageController = TextEditingController();
   List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
-  late final StreamSubscription<List<Map<String, dynamic>>>
-      _messagesSubscription;
 
   Timer? _debounce;
   bool _isSending = false;
@@ -33,30 +31,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
   void initState() {
     super.initState();
     _loadMessages();
-    _subscribeToMessages();
     _scrollController.addListener(_scrollListener);
-  }
-
-  void _subscribeToMessages() {
-    _messagesSubscription = Supabase.instance.client
-        .from('messages')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: true)
-        .limit(_limit)
-        .execute()
-        .map((event) => event.map((e) => e).toList())
-        .listen((messages) {
-          setState(() {
-            _messages = messages;
-          });
-        });
   }
 
   @override
   void dispose() {
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
-    _messagesSubscription.cancel();
     _messageController.dispose();
     super.dispose();
   }
@@ -67,6 +48,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
         !_scrollController.position.outOfRange) {
       _loadMessages();
     }
+  }
+
+  Future<void> _refreshMessages() async {
+    setState(() {
+      _offset = 0;
+      _hasMore = true;
+    });
+    await _loadMessages();
   }
 
   Future<void> _loadMessages() async {
@@ -89,7 +78,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           )
         ''')
           .is_('parent_id', null)
-          .order('created_at', ascending: true)
+          .order('created_at', ascending: false)
           .range(_offset, _offset + _limit - 1)
           .execute();
 
@@ -122,6 +111,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
         title: const Text('커뮤니티'),
         backgroundColor: AppTheme.backgroundColor,
         foregroundColor: AppTheme.textColor,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshMessages,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -319,6 +314,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
         setState(() {
           _replyToId = null;
         });
+        await _refreshMessages();
       } catch (e) {
         print('메시지 전송 중 오류 발생: $e');
         ScaffoldMessenger.of(context).showSnackBar(
