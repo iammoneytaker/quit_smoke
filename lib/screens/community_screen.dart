@@ -41,34 +41,15 @@ class _CommunityScreenState extends State<CommunityScreen> {
     _messagesSubscription = Supabase.instance.client
         .from('messages')
         .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false)
+        .order('created_at', ascending: true)
+        .limit(_limit)
         .execute()
         .map((event) => event.map((e) => e).toList())
         .listen((messages) {
           setState(() {
-            _messages = _groupMessages(messages);
+            _messages = messages;
           });
         });
-  }
-
-  List<Map<String, dynamic>> _groupMessages(
-      List<Map<String, dynamic>> messages) {
-    final Map<int, Map<String, dynamic>> groupedMessages = {};
-    print(messages);
-    for (var message in messages) {
-      if (message['parent_id'] == null) {
-        groupedMessages[message['id']] = {...message, 'replies': []};
-      } else {
-        final parentId = message['parent_id'] as int;
-        if (groupedMessages.containsKey(parentId)) {
-          print('Parent ID: $parentId, Reply: $message');
-          groupedMessages[parentId]!['replies'].add(message);
-        }
-      }
-    }
-    return groupedMessages.values.toList()
-      ..sort((a, b) =>
-          (b['created_at'] as String).compareTo(a['created_at'] as String));
   }
 
   @override
@@ -97,9 +78,18 @@ class _CommunityScreenState extends State<CommunityScreen> {
     try {
       final response = await Supabase.instance.client
           .from('messages')
-          .select('*, replies:messages!parent_id(*)')
+          .select('''
+          *,
+          replies:messages!parent_id(
+            id,
+            content,
+            created_at,
+            nickname,
+            user_id
+          )
+        ''')
           .is_('parent_id', null)
-          .order('created_at', ascending: false)
+          .order('created_at', ascending: true)
           .range(_offset, _offset + _limit - 1)
           .execute();
 
@@ -108,9 +98,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
             List<Map<String, dynamic>>.from(response.data);
         setState(() {
           if (_offset == 0) {
-            _messages = _groupMessages(newMessages);
+            _messages = newMessages;
           } else {
-            _messages.addAll(_groupMessages(newMessages));
+            _messages.addAll(newMessages);
           }
           _offset += newMessages.length;
           _hasMore = newMessages.length == _limit;
@@ -157,7 +147,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   }
 
   Widget _buildMessageItem(Map<String, dynamic> message) {
-    final replies = (message['replies'] as List<dynamic>?) ?? [];
+    final replies = message['replies'] as List<dynamic>? ?? [];
     final isExpanded = _expandedReplies[message['id'] as int] ?? false;
     final visibleReplies = isExpanded ? replies : replies.take(2).toList();
 
@@ -204,15 +194,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
             if (replies.isNotEmpty) ...[
               const Divider(),
               ...visibleReplies.map((reply) => _buildReplyItem(reply)),
-              if (replies.length > 2)
+              if (replies.length > 2 && !isExpanded)
                 TextButton(
                   onPressed: () {
                     setState(() {
-                      _expandedReplies[message['id'] as int] = !isExpanded;
+                      _expandedReplies[message['id'] as int] = true;
                     });
                   },
-                  child: Text(
-                      isExpanded ? '답글 접기' : '답글 ${replies.length - 2}개 더 보기'),
+                  child: Text('답글 ${replies.length - 2}개 더 보기'),
                 ),
             ],
           ],
@@ -318,31 +307,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
           'created_at': DateTime.now().toIso8601String(),
           'nickname': nickname,
           'user_id': userId,
-          'parent_id': _replyToId,
         };
 
-        final response = await Supabase.instance.client
-            .from('messages')
-            .insert(messageData)
-            .execute();
-
-        if (response.data != null) {
-          final newMessage = response.data![0] as Map<String, dynamic>;
-          setState(() {
-            if (_replyToId != null) {
-              final parentIndex =
-                  _messages.indexWhere((m) => m['id'] == _replyToId);
-              if (parentIndex != -1) {
-                _messages[parentIndex]['replies'] = [
-                  newMessage,
-                  ...(_messages[parentIndex]['replies'] as List)
-                ];
-              }
-            } else {
-              _messages.insert(0, {...newMessage, 'replies': []});
-            }
-          });
+        if (_replyToId != null) {
+          messageData['parent_id'] = _replyToId;
         }
+
+        await Supabase.instance.client.from('messages').insert(messageData);
 
         _messageController.clear();
         setState(() {
