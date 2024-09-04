@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:quit_smoke/screens/community_screen.dart';
 import 'package:quit_smoke/screens/home_screen.dart';
+import 'package:quit_smoke/screens/statistics_screen.dart';
 import 'package:quit_smoke/screens/welcome_screen.dart';
 import 'package:quit_smoke/screens/onboarding_screen.dart';
 import 'package:quit_smoke/theme/app_theme.dart';
 import 'package:quit_smoke/utils/user_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://jszchnsbkfvpczxypimw.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzemNobnNia2Z2cGN6eHlwaW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwMDc4NjIsImV4cCI6MjA0MDU4Mzg2Mn0.rTB21g-Tsi6Qpu6npI07a_5aGIKcjMBvwSAiwA4vQjA',
+  );
+
   runApp(const MyApp());
 }
 
@@ -120,8 +131,8 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   static final List<Widget> _widgetOptions = <Widget>[
     const HomeScreen(),
-    // StatisticsScreen(),
-    // const CommunityScreen(),
+    const StatisticsScreen(),
+    const CommunityScreen(),
     // ProfileScreen(),
   ];
 
