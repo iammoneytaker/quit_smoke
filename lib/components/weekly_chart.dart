@@ -290,23 +290,41 @@ class _WeeklyChartState extends State<WeeklyChart> {
           TableRow(
             children: [
               _buildTableCell(['월', '화', '수', '목', '금', '토', '일'][i]),
-              _buildTableCell('${thisWeekData[i].y.toInt()}개비'),
-              _buildTableCell('${lastWeekData[i].y.toInt()}개비'),
+              _buildTableCell(
+                '${thisWeekData[i].y.toInt()}개비',
+                isHighlighted: thisWeekData[i].y.toInt() >= 1,
+              ),
+              _buildTableCell(
+                '${lastWeekData[i].y.toInt()}개비',
+                isHighlighted: lastWeekData[i].y.toInt() >= 1,
+              ),
             ],
           ),
       ],
     );
   }
 
-  Widget _buildTableCell(String text, {bool isHeader = false}) {
+  Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    bool isHighlighted = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(8),
-      color: isHeader ? AppTheme.primaryColor : AppTheme.cardColor,
+      color: isHeader
+          ? AppTheme.primaryColor
+          : isHighlighted
+              ? AppTheme.cardEmphasisColor // Highlighted cell color
+              : AppTheme.cardColor,
       child: Text(
         text,
         style: TextStyle(
           color: isHeader ? AppTheme.backgroundColor : AppTheme.textColor,
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isHeader
+              ? FontWeight.bold
+              : isHighlighted
+                  ? FontWeight.bold
+                  : FontWeight.normal,
         ),
         textAlign: TextAlign.center,
       ),

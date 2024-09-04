@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import 'package:quit_smoke/theme/app_theme.dart';
 
 class MonthlyChart extends StatelessWidget {
@@ -188,11 +187,17 @@ class MonthlyChart extends StatelessWidget {
                 i < thisMonthData.length
                     ? '${thisMonthData[i].y.toInt()}개비'
                     : '0개비', // 안전하게 0개비로 대체
+                isHighlighted: i < thisMonthData.length
+                    ? thisMonthData[i].y.toInt() >= 1
+                    : false,
               ),
               _buildTableCell(
                 i < lastMonthData.length
                     ? '${lastMonthData[i].y.toInt()}개비'
                     : '0개비', // 안전하게 0개비로 대체
+                isHighlighted: i < lastMonthData.length
+                    ? lastMonthData[i].y.toInt() >= 1
+                    : false,
               ),
             ],
           ),
@@ -200,15 +205,27 @@ class MonthlyChart extends StatelessWidget {
     );
   }
 
-  Widget _buildTableCell(String text, {bool isHeader = false}) {
+  Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    bool isHighlighted = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(8),
-      color: isHeader ? AppTheme.primaryColor : AppTheme.cardColor,
+      color: isHeader
+          ? AppTheme.primaryColor
+          : isHighlighted
+              ? AppTheme.cardEmphasisColor // Highlighted cell color
+              : AppTheme.cardColor,
       child: Text(
         text,
         style: TextStyle(
           color: isHeader ? AppTheme.backgroundColor : AppTheme.textColor,
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isHeader
+              ? FontWeight.bold
+              : isHighlighted
+                  ? FontWeight.bold
+                  : FontWeight.normal,
         ),
         textAlign: TextAlign.center,
       ),

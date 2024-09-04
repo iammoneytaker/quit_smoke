@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import 'package:quit_smoke/theme/app_theme.dart';
 
 class HourlyChart extends StatelessWidget {
@@ -103,22 +102,35 @@ class HourlyChart extends StatelessWidget {
           TableRow(
             children: [
               _buildTableCell('$i시 - ${i + 1}시'),
-              _buildTableCell('${hourlyData[i].y.toInt()}개비'),
+              _buildTableCell('${hourlyData[i].y.toInt()}개비',
+                  isHighlighted: hourlyData[i].y.toInt() >= 1),
             ],
           ),
       ],
     );
   }
 
-  Widget _buildTableCell(String text, {bool isHeader = false}) {
+  Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    bool isHighlighted = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(8),
-      color: isHeader ? AppTheme.primaryColor : AppTheme.cardColor,
+      color: isHeader
+          ? AppTheme.primaryColor
+          : isHighlighted
+              ? AppTheme.cardEmphasisColor // Highlighted cell color
+              : AppTheme.cardColor,
       child: Text(
         text,
         style: TextStyle(
           color: isHeader ? AppTheme.backgroundColor : AppTheme.textColor,
-          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          fontWeight: isHeader
+              ? FontWeight.bold
+              : isHighlighted
+                  ? FontWeight.bold
+                  : FontWeight.normal,
         ),
         textAlign: TextAlign.center,
       ),

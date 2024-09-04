@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quit_smoke/screens/recent_coumunity_card.dart';
 import 'dart:async';
 import 'package:quit_smoke/utils/smoke_record_manager.dart';
 import 'package:quit_smoke/utils/user_preferences.dart';
@@ -102,6 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildTimeSinceLastSmokeCard(),
             const SizedBox(height: 24),
             _buildHealthBenefitCard(),
+            const SizedBox(height: 24),
+            const RecentMessagesCard(),
           ],
         ),
       ),

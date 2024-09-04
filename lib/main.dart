@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quit_smoke/screens/community_screen.dart';
 import 'package:quit_smoke/screens/home_screen.dart';
+import 'package:quit_smoke/screens/profile_screen.dart';
 import 'package:quit_smoke/screens/statistics_screen.dart';
 import 'package:quit_smoke/screens/welcome_screen.dart';
 import 'package:quit_smoke/screens/onboarding_screen.dart';
@@ -133,7 +134,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const StatisticsScreen(),
     const CommunityScreen(),
-    // ProfileScreen(),
+    const ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
