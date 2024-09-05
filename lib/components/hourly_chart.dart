@@ -13,6 +13,7 @@ class HourlyChart extends StatelessWidget {
 
     return Column(
       children: [
+        const SizedBox(height: 20),
         _buildChart(hourlyData),
         const SizedBox(height: 20),
         _buildHourlyTable(hourlyData),
@@ -69,10 +70,24 @@ class HourlyChart extends StatelessWidget {
           maxY:
               hourlyData.map((spot) => spot.y).reduce((a, b) => a > b ? a : b),
           clipData: const FlClipData.all(),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              tooltipBgColor: AppTheme.cardColor,
+              getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+                return touchedBarSpots.map((barSpot) {
+                  final flSpot = barSpot;
+                  return LineTooltipItem(
+                    '${flSpot.x.toInt()}시: ${flSpot.y.toInt()}개',
+                    const TextStyle(color: AppTheme.textColor),
+                  );
+                }).toList();
+              },
+            ),
+          ),
           lineBarsData: [
             LineChartBarData(
               spots: hourlyData,
-              isCurved: true,
+              // isCurved: true,
               color: AppTheme.primaryColor,
               barWidth: 3,
               isStrokeCapRound: true,

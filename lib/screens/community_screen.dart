@@ -94,14 +94,30 @@ class _CommunityScreenState extends State<CommunityScreen> {
           _offset += newMessages.length;
           _hasMore = newMessages.length == _limit;
         });
+      } else {
+        _showErrorSnackBar('데이터가 존재하지 않습니다.');
       }
     } catch (e) {
       print('Error loading messages: $e');
+      _showErrorSnackBar('메시지 로딩 실패: 네트워크 연결을 확인해주세요.또는 잠시 후 시도해주세요.');
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        action: SnackBarAction(
+          label: '다시 시도',
+          onPressed: _refreshMessages,
+        ),
+      ),
+    );
   }
 
   @override

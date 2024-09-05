@@ -154,7 +154,7 @@ class _WeeklyChartState extends State<WeeklyChart> {
           lineBarsData: [
             LineChartBarData(
               spots: thisWeekData,
-              isCurved: true,
+              // isCurved: true,
               color: AppTheme.primaryColor,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -166,7 +166,7 @@ class _WeeklyChartState extends State<WeeklyChart> {
             ),
             LineChartBarData(
               spots: lastWeekData,
-              isCurved: true,
+              // isCurved: true,
               color: AppTheme.accentColor,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -183,8 +183,9 @@ class _WeeklyChartState extends State<WeeklyChart> {
               getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   final flSpot = barSpot;
+                  final isThisWeek = barSpot.barIndex == 0;
                   return LineTooltipItem(
-                    '${flSpot.y.toInt()}개',
+                    '${isThisWeek ? "이번 주" : "저번 주"}: ${flSpot.y.toInt()}개',
                     const TextStyle(color: AppTheme.textColor),
                   );
                 }).toList();

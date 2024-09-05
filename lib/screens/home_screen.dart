@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _timeSinceLastSmoke = '';
   String _currentBenefit = '';
   Timer? _timer;
+  bool _hasSmokingRecord = false;
 
   @override
   void initState() {
@@ -41,11 +42,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final lastSmoke = await SmokeRecordManager.getLastSmokeTime();
     final message = await MotivationMessages.getRandomMessage(
         profile?['nickname'] ?? '사용자');
+    final hasSmokingRecordData = await SmokeRecordManager.hasAnySmokingRecord();
 
     setState(() {
       _todayCount = todayCount;
       _lastSmokeTime = lastSmoke;
       _motivationMessage = message;
+      _hasSmokingRecord = hasSmokingRecordData;
     });
 
     _updateTimeSinceLastSmoke();
@@ -66,6 +69,11 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentBenefit = HealthBenefits.getBenefitForDuration(difference);
       });
     }
+    // if (!_hasSmokingRecord) {
+    //   setState(() {
+    //     _hasSmokingRecord = !_hasSmokingRecord;
+    //   });
+    // }
   }
 
   void _updateSmokeCount(int change) async {
@@ -84,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
           SmokeRecordManager.removeLastSmokeRecord();
         }
       });
-      _updateTimeSinceLastSmoke();
+      await _loadData(); // 데이터를 새로 로드하고 UI를 업데이트
+      // _updateTimeSinceLastSmoke();
     }
   }
 
@@ -141,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              '$_todayCount개비',
+              _hasSmokingRecord ? '$_todayCount개비' : '기록필요',
               style: const TextStyle(
                 fontSize: 48,
                 fontWeight: FontWeight.bold,
@@ -171,6 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: const CircleBorder(),
         backgroundColor: color,
         padding: const EdgeInsets.all(16),
+        elevation: 4,
       ),
       child: Icon(icon, color: Colors.white),
     );
@@ -192,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _timeSinceLastSmoke,
+              _hasSmokingRecord ? _timeSinceLastSmoke : '기록이 필요합니다.',
               style: const TextStyle(
                   color: AppTheme.primaryColor,
                   fontSize: 24,
@@ -220,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              _currentBenefit,
+              _hasSmokingRecord ? _currentBenefit : '기록이 필요합니다.',
               style: const TextStyle(
                   color: AppTheme.subtleTextColor, fontSize: 16),
             ),

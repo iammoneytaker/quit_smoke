@@ -145,7 +145,7 @@ class _CustomPeriodChartState extends State<CustomPeriodChart> {
           lineBarsData: [
             LineChartBarData(
               spots: _chartData,
-              isCurved: true,
+              // isCurved: true,
               color: AppTheme.primaryColor,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -159,6 +159,7 @@ class _CustomPeriodChartState extends State<CustomPeriodChart> {
           lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
               tooltipBgColor: AppTheme.cardColor,
+              tooltipMargin: 8,
               getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   final flSpot = barSpot;
@@ -171,6 +172,36 @@ class _CustomPeriodChartState extends State<CustomPeriodChart> {
                 }).toList();
               },
             ),
+            touchCallback: (FlTouchEvent event, LineTouchResponse? lineTouch) {
+              if (!event.isInterestedForInteractions ||
+                  lineTouch == null ||
+                  lineTouch.lineBarSpots == null) {
+                return;
+              }
+              final value = lineTouch.lineBarSpots![0].x;
+              final date = _startDate!.add(Duration(days: value.toInt()));
+              final count = lineTouch.lineBarSpots![0].y.toInt();
+
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: AppTheme.cardColor,
+                  title: const Text('상세 정보',
+                      style: TextStyle(color: AppTheme.textColor)),
+                  content: Text(
+                    '날짜: ${DateFormat('yyyy-MM-dd').format(date)}\n흡연량: $count개',
+                    style: const TextStyle(color: AppTheme.textColor),
+                  ),
+                  actions: [
+                    TextButton(
+                      child: const Text('닫기',
+                          style: TextStyle(color: AppTheme.accentColor)),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),

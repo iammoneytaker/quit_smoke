@@ -104,7 +104,7 @@ class DailyChart extends StatelessWidget {
           lineBarsData: [
             LineChartBarData(
               spots: todayData,
-              isCurved: true,
+              // isCurved: true,
               color: AppTheme.primaryColor,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -116,7 +116,7 @@ class DailyChart extends StatelessWidget {
             ),
             LineChartBarData(
               spots: yesterdayData,
-              isCurved: true,
+              // isCurved: true,
               color: AppTheme.accentColor,
               barWidth: 3,
               isStrokeCapRound: true,
@@ -133,8 +133,9 @@ class DailyChart extends StatelessWidget {
               getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
                 return touchedBarSpots.map((barSpot) {
                   final flSpot = barSpot;
+                  final isToday = barSpot.barIndex == 0;
                   return LineTooltipItem(
-                    '${flSpot.y.toInt()}개',
+                    '${isToday ? "오늘" : "어제"}: ${flSpot.y.toInt()}개',
                     const TextStyle(color: AppTheme.textColor),
                   );
                 }).toList();

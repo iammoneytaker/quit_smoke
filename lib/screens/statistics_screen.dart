@@ -18,6 +18,7 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   String _currentView = 'daily';
   List<Map<String, dynamic>> _smokeRecords = [];
+  bool _hasSmokingRecord = false;
 
   @override
   void initState() {
@@ -27,8 +28,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Future<void> _loadSmokeRecords() async {
     final records = await SmokeRecordManager.getSmokeRecords();
+    final hasRecord = await SmokeRecordManager.hasAnySmokingRecord();
     setState(() {
       _smokeRecords = records;
+      _hasSmokingRecord = hasRecord;
     });
   }
 
@@ -40,19 +43,28 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         title: const Text('흡연 통계', style: TextStyle(color: AppTheme.textColor)),
         backgroundColor: AppTheme.backgroundColor,
       ),
-      body: Column(
-        children: [
-          _buildViewSelector(),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: _buildCurrentView(),
+      body: _hasSmokingRecord
+          ? Column(
+              children: [
+                _buildViewSelector(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16.0, horizontal: 16),
+                      child: _buildCurrentView(),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : const Center(
+              child: Text(
+                '흡연을 기록해 주세요!\n통계를 보려면 먼저 흡연을 기록해야 합니다.',
+                style: TextStyle(color: AppTheme.textColor, fontSize: 18),
+                textAlign: TextAlign.center,
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 

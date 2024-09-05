@@ -4,6 +4,11 @@ import 'dart:convert';
 class SmokeRecordManager {
   static const String _keySmokeRecords = 'smoke_records';
 
+  static Future<bool> hasAnySmokingRecord() async {
+    final records = await getSmokeRecords();
+    return records.isNotEmpty;
+  }
+
   static Future<void> addSmokeRecord(Map<String, dynamic> record) async {
     final prefs = await SharedPreferences.getInstance();
     final String? recordsJson = prefs.getString(_keySmokeRecords);

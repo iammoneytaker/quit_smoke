@@ -9,6 +9,7 @@ import 'package:quit_smoke/theme/app_theme.dart';
 import 'package:quit_smoke/utils/user_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+//TODO: 애플 기기에서 흡연량 다 빼보고 처리 되는지 확인할 것. -> 테스트 플라이트 배포.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -149,30 +150,38 @@ class _MainScreenState extends State<MainScreen> {
       body: SafeArea(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '홈',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: '통계',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: '커뮤니티',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: '프로필',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        backgroundColor: AppTheme.cardColor, // 배경색상 설정
-        selectedItemColor: AppTheme.primaryColor,
-        unselectedItemColor: AppTheme.subtleTextColor,
-        onTap: _onItemTapped,
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          // Set the transparency here
+          canvasColor: AppTheme.cardColor.withOpacity(1),
+          // Set your custom color here
+          primaryColor: AppTheme.primaryColor,
+        ),
+        child: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: '홈',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart),
+              label: '통계',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: '커뮤니티',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person),
+              label: '프로필',
+            ),
+          ],
+          currentIndex: _selectedIndex,
+          backgroundColor: AppTheme.cardColor, // 배경색상 설정
+          selectedItemColor: AppTheme.primaryColor,
+          unselectedItemColor: AppTheme.subtleTextColor,
+          onTap: _onItemTapped,
+        ),
       ),
     );
   }

@@ -105,6 +105,18 @@ class MonthlyChart extends StatelessWidget {
           ),
           gridData: const FlGridData(show: false),
           borderData: FlBorderData(show: false),
+          barTouchData: BarTouchData(
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: AppTheme.cardColor,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                String label = groupIndex == 0 ? '이번 달' : '지난 달';
+                return BarTooltipItem(
+                  '$label: ${rod.toY.toInt()}개',
+                  const TextStyle(color: AppTheme.textColor),
+                );
+              },
+            ),
+          ),
           barGroups: [
             BarChartGroupData(
               x: 0,
@@ -240,20 +252,7 @@ class MonthlyChart extends StatelessWidget {
         .indexOf(lastMonthData.reduce((a, b) => a.y > b.y ? a : b));
 
     String comment = '이번 달은 ${thisMonthMaxDay + 1}일에 흡연이 가장 많았고, '
-        '지난 달은 ${lastMonthMaxDay + 1}일에 흡연이 가장 많았습니다.\n';
-
-    final thisMonthTotal = thisMonthData.fold(0.0, (sum, spot) => sum + spot.y);
-    final lastMonthTotal = lastMonthData.fold(0.0, (sum, spot) => sum + spot.y);
-    final difference = thisMonthTotal - lastMonthTotal;
-
-    if (difference > 0) {
-      comment +=
-          '이번 달에는 지난 달보다 ${difference.toInt()}개비 더 피우셨네요. 다음 달엔 줄여보는 게 어떨까요?';
-    } else if (difference < 0) {
-      comment += '이번 달에는 지난 달보다 ${(-difference).toInt()}개비 덜 피우셨어요. 대단해요!';
-    } else {
-      comment += '이번 달은 지난 달과 동일한 흡연량이에요. 조금씩 줄여나가 보세요!';
-    }
+        '지난 달은 ${lastMonthMaxDay + 1}일에 흡연이 가장 많았습니다.';
 
     return Container(
       padding: const EdgeInsets.all(16),
