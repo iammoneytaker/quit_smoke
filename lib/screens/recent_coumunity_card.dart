@@ -21,6 +21,7 @@ class _RecentMessagesCardState extends State<RecentMessagesCard> {
   }
 
   Future<void> _loadRecentMessages() async {
+    if (!mounted) return;
     final response = await Supabase.instance.client
         .from('messages')
         .select()
@@ -28,7 +29,7 @@ class _RecentMessagesCardState extends State<RecentMessagesCard> {
         .limit(2)
         .execute();
 
-    if (response.data != null) {
+    if (mounted && response.data != null) {
       setState(() {
         _recentMessages = List<Map<String, dynamic>>.from(response.data);
         _isLoading = false;

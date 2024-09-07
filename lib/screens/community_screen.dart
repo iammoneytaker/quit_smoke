@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:quitSmoke/data/ad_data.dart';
 import 'package:quitSmoke/utils/user_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quitSmoke/theme/app_theme.dart';
@@ -16,6 +18,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
   final TextEditingController _messageController = TextEditingController();
   List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
 
   Timer? _debounce;
   bool _isSending = false;
@@ -30,12 +34,33 @@ class _CommunityScreenState extends State<CommunityScreen> {
   @override
   void initState() {
     super.initState();
+    _loadBannerAd();
     _loadMessages();
     _scrollController.addListener(_scrollListener);
   }
 
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: BANNER_ADID,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    );
+    _bannerAd!.load();
+  }
+
   @override
   void dispose() {
+    _bannerAd?.dispose();
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
     _messageController.dispose();
@@ -152,6 +177,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 controller: _scrollController,
                 itemCount: _messages.length + (_hasMore ? 1 : 0),
                 itemBuilder: (context, index) {
+                  if (index > 0 && index % 10 == 0 && _isBannerAdLoaded) {
+                    return _buildBannerAd();
+                  }
                   if (index < _messages.length) {
                     return _buildMessageItem(_messages[index]);
                   } else if (_hasMore) {
@@ -302,6 +330,22 @@ class _CommunityScreenState extends State<CommunityScreen> {
             onPressed: _sendMessage,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBannerAd() {
+    return Card(
+      color: AppTheme.cardColor,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SizedBox(
+          width: _bannerAd!.size.width.toDouble(),
+          height: _bannerAd!.size.height.toDouble(),
+          child: AdWidget(ad: _bannerAd!),
+        ),
       ),
     );
   }

@@ -1,11 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:quitSmoke/data/ad_data.dart';
 import 'package:quitSmoke/theme/app_theme.dart';
 
-class MonthlyChart extends StatelessWidget {
+class MonthlyChart extends StatefulWidget {
   final List<Map<String, dynamic>> smokeRecords;
 
   const MonthlyChart({super.key, required this.smokeRecords});
+
+  @override
+  State<MonthlyChart> createState() => _MonthlyChartState();
+}
+
+class _MonthlyChartState extends State<MonthlyChart> {
+  BannerAd? _bannerAd;
+
+  bool _isBannerAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: BANNER_ADID,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) {
+          setState(() {
+            _isBannerAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+        },
+      ),
+    );
+    _bannerAd!.load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  Widget _buildBannerAd() {
+    if (!_isBannerAdLoaded) return const SizedBox.shrink();
+
+    return Card(
+      color: AppTheme.cardColor,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: _bannerAd!.size.width.toDouble(),
+        height: 72.0,
+        alignment: Alignment.center,
+        child: AdWidget(ad: _bannerAd!),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +81,8 @@ class MonthlyChart extends StatelessWidget {
         _buildChart(thisMonthTotal, lastMonthTotal),
         const SizedBox(height: 20),
         _buildComment(thisMonthTotal, lastMonthTotal),
+        const SizedBox(height: 20),
+        if (_isBannerAdLoaded) _buildBannerAd(),
         const SizedBox(height: 20),
         _buildMonthlyTable(thisMonthData, lastMonthData),
         const SizedBox(height: 20),
@@ -168,7 +228,7 @@ class MonthlyChart extends StatelessWidget {
     final startOfMonth = DateTime(date.year, date.month, 1);
     final endOfMonth = DateTime(date.year, date.month + 1, 0);
 
-    return smokeRecords.where((record) {
+    return widget.smokeRecords.where((record) {
       final recordDate = DateTime.parse(record['timestamp']);
       return recordDate
               .isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
@@ -272,7 +332,7 @@ class MonthlyChart extends StatelessWidget {
     List<FlSpot> spots =
         List.generate(daysInMonth, (index) => FlSpot(index.toDouble(), 0));
 
-    for (var record in smokeRecords) {
+    for (var record in widget.smokeRecords) {
       final recordDate = DateTime.parse(record['timestamp']);
       if (recordDate.year == date.year && recordDate.month == date.month) {
         spots[recordDate.day - 1] = FlSpot(
