@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
 
 class MonthlyChart extends StatelessWidget {
   final List<Map<String, dynamic>> smokeRecords;

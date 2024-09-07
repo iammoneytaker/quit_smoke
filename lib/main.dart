@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:quit_smoke/screens/community_screen.dart';
-import 'package:quit_smoke/screens/home_screen.dart';
-import 'package:quit_smoke/screens/profile_screen.dart';
-import 'package:quit_smoke/screens/statistics_screen.dart';
-import 'package:quit_smoke/screens/welcome_screen.dart';
-import 'package:quit_smoke/screens/onboarding_screen.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
-import 'package:quit_smoke/utils/user_preferences.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:quitSmoke/screens/community_screen.dart';
+import 'package:quitSmoke/screens/home_screen.dart';
+import 'package:quitSmoke/screens/profile_screen.dart';
+import 'package:quitSmoke/screens/statistics_screen.dart';
+import 'package:quitSmoke/screens/welcome_screen.dart';
+import 'package:quitSmoke/screens/onboarding_screen.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 //TODO: 애플 기기에서 흡연량 다 빼보고 처리 되는지 확인할 것. -> 테스트 플라이트 배포.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await MobileAds.instance.initialize();
 
   await Supabase.initialize(
     url: 'https://jszchnsbkfvpczxypimw.supabase.co',

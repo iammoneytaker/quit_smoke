@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:quit_smoke/screens/recent_coumunity_card.dart';
+import 'package:quitSmoke/screens/recent_coumunity_card.dart';
 import 'dart:async';
-import 'package:quit_smoke/utils/smoke_record_manager.dart';
-import 'package:quit_smoke/utils/user_preferences.dart';
-import 'package:quit_smoke/utils/motivation_messages.dart';
-import 'package:quit_smoke/utils/health_benefits.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
+import 'package:quitSmoke/utils/smoke_record_manager.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
+import 'package:quitSmoke/utils/motivation_messages.dart';
+import 'package:quitSmoke/utils/health_benefits.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

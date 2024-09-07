@@ -1,4 +1,4 @@
-package com.example.quit_smoke
+package com.example.quitSmoke
 
 import io.flutter.embedding.android.FlutterActivity
 

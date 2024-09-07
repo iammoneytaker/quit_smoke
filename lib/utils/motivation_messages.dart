@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:quit_smoke/utils/user_preferences.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
 
 class MotivationMessages {
   static Future<String> getRandomMessage(String username) async {

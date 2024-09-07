@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:quit_smoke/utils/user_preferences.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -122,37 +122,49 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('커뮤니티'),
-        backgroundColor: AppTheme.backgroundColor,
-        foregroundColor: AppTheme.textColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshMessages,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: _messages.length + (_hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index < _messages.length) {
-                  return _buildMessageItem(_messages[index]);
-                } else if (_hasMore) {
-                  return const Center(child: CircularProgressIndicator());
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('커뮤니티'),
+          backgroundColor: AppTheme.backgroundColor,
+          foregroundColor: AppTheme.textColor,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _refreshMessages,
             ),
+          ],
+          leading: IconButton(
+            icon: const Icon(Icons.home, color: AppTheme.textColor),
+            onPressed: () {
+              // 홈 화면으로 이동
+              Navigator.of(context).pushReplacementNamed('/');
+            },
           ),
-          _buildMessageInput(),
-        ],
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                itemCount: _messages.length + (_hasMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < _messages.length) {
+                    return _buildMessageItem(_messages[index]);
+                  } else if (_hasMore) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else {
+                    return const SizedBox.shrink();
+                  }
+                },
+              ),
+            ),
+            _buildMessageInput(),
+          ],
+        ),
       ),
     );
   }

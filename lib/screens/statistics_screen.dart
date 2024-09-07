@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:quit_smoke/components/daily_chart.dart';
-import 'package:quit_smoke/components/weekly_chart.dart';
-import 'package:quit_smoke/components/monthly_chart.dart';
-import 'package:quit_smoke/components/custom_period_chart.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
-import 'package:quit_smoke/utils/smoke_record_manager.dart';
+import 'package:quitSmoke/components/daily_chart.dart';
+import 'package:quitSmoke/components/weekly_chart.dart';
+import 'package:quitSmoke/components/monthly_chart.dart';
+import 'package:quitSmoke/components/custom_period_chart.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
+import 'package:quitSmoke/utils/smoke_record_manager.dart';
 
 import '../components/hourly_chart.dart';
 

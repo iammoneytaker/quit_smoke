@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
 
 class DailyChart extends StatelessWidget {
   final List<Map<String, dynamic>> smokeRecords;

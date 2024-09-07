@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:quit_smoke/screens/home_screen.dart';
-import 'package:quit_smoke/utils/user_preferences.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
+import 'package:quitSmoke/screens/home_screen.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

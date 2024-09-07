@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:quit_smoke/screens/onboarding_screen.dart';
-import 'package:quit_smoke/utils/user_preferences.dart';
+import 'package:quitSmoke/screens/onboarding_screen.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
-import 'package:quit_smoke/screens/community_screen.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
+import 'package:quitSmoke/screens/community_screen.dart';
 
 class RecentMessagesCard extends StatefulWidget {
   const RecentMessagesCard({super.key});

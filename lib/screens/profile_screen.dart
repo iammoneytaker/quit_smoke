@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:quit_smoke/theme/app_theme.dart';
-import 'package:quit_smoke/utils/smoke_record_manager.dart';
+import 'package:quitSmoke/theme/app_theme.dart';
+import 'package:quitSmoke/utils/smoke_record_manager.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:in_app_review/in_app_review.dart';
