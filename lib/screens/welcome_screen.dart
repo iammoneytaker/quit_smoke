@@ -127,9 +127,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           UserPreferences.setAppStartDate();
                           UserPreferences
                               .setSeenWelcomeScreen(); // Mark the welcome screen as seen
-                          Navigator.of(context).pushReplacement(
+                          Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(
                                 builder: (context) => const OnboardingScreen()),
+                            (route) => false,
                           );
                         },
                         style: ElevatedButton.styleFrom(

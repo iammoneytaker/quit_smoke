@@ -134,12 +134,18 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  static final List<Widget> _widgetOptions = <Widget>[
-    const HomeScreen(),
-    const StatisticsScreen(),
-    const CommunityScreen(),
-    const ProfileScreen(),
-  ];
+  late List<Widget> _widgetOptions;
+
+  @override
+  void initState() {
+    super.initState();
+    _widgetOptions = <Widget>[
+      const HomeScreen(),
+      const StatisticsScreen(),
+      const CommunityScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -150,14 +156,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
-          // Set the transparency here
           canvasColor: AppTheme.cardColor.withOpacity(1),
-          // Set your custom color here
           primaryColor: AppTheme.primaryColor,
         ),
         child: BottomNavigationBar(
@@ -180,7 +182,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ],
           currentIndex: _selectedIndex,
-          backgroundColor: AppTheme.cardColor, // 배경색상 설정
+          backgroundColor: AppTheme.cardColor,
           selectedItemColor: AppTheme.primaryColor,
           unselectedItemColor: AppTheme.subtleTextColor,
           onTap: _onItemTapped,

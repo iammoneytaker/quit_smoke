@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:quitSmoke/main.dart';
 import 'package:quitSmoke/screens/home_screen.dart';
 import 'package:quitSmoke/utils/user_preferences.dart';
 import 'package:quitSmoke/theme/app_theme.dart';
@@ -200,8 +201,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
       try {
         await UserPreferences.saveUserProfile(userProfile);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+          (route) => false,
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
