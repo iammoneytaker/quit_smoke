@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:quitSmoke/data/ad_data.dart';
-import 'package:quitSmoke/screens/recent_coumunity_card.dart';
 import 'dart:async';
 import 'package:quitSmoke/utils/smoke_record_manager.dart';
 import 'package:quitSmoke/utils/user_preferences.dart';
@@ -24,39 +21,16 @@ class _HomeScreenState extends State<HomeScreen> {
   String _currentBenefit = '';
   Timer? _timer;
   bool _hasSmokingRecord = false;
-  BannerAd? _bannerAd;
-  bool _isBannerAdLoaded = false;
 
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
     _loadData();
     _startTimer();
   }
 
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: BANNER_ADID,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          setState(() {
-            _isBannerAdLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    );
-    _bannerAd!.load();
-  }
-
   @override
   void dispose() {
-    _bannerAd?.dispose();
     _timer?.cancel();
     super.dispose();
   }
@@ -137,10 +111,6 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildTimeSinceLastSmokeCard(),
             const SizedBox(height: 24),
             _buildHealthBenefitCard(),
-            const SizedBox(height: 24),
-            _buildBannerAd(), // 여기에 배너 광고 추가
-            const SizedBox(height: 24),
-            const RecentMessagesCard(),
           ],
         ),
       ),
@@ -211,25 +181,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Icon(icon, color: Colors.white),
     );
-  }
-
-  Widget _buildBannerAd() {
-    return _isBannerAdLoaded
-        ? Card(
-            color: AppTheme.cardColor,
-            elevation: 4,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: SizedBox(
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
-            ),
-          )
-        : const SizedBox();
   }
 
   Widget _buildTimeSinceLastSmokeCard() {

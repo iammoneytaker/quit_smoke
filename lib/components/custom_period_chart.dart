@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
-import 'package:quitSmoke/data/ad_data.dart';
 import 'package:quitSmoke/theme/app_theme.dart';
 
 class CustomPeriodChart extends StatefulWidget {
@@ -19,64 +17,12 @@ class _CustomPeriodChartState extends State<CustomPeriodChart> {
   DateTime? _endDate;
   List<FlSpot> _chartData = [];
 
-  BannerAd? _bannerAd;
-
-  bool _isBannerAdLoaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBannerAd();
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: BANNER_ADID,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          setState(() {
-            _isBannerAdLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    );
-    _bannerAd!.load();
-  }
-
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    super.dispose();
-  }
-
-  Widget _buildBannerAd() {
-    if (!_isBannerAdLoaded) return const SizedBox.shrink();
-
-    return Card(
-      color: AppTheme.cardColor,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: _bannerAd!.size.width.toDouble(),
-        height: 72.0,
-        alignment: Alignment.center,
-        child: AdWidget(ad: _bannerAd!),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         _buildDatePicker(),
         const SizedBox(height: 20),
-        if (_isBannerAdLoaded) _buildBannerAd(),
         if (_startDate != null && _endDate != null) ...[
           const SizedBox(height: 20),
           _buildChart(),

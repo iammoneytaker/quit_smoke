@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
-import 'package:quitSmoke/data/ad_data.dart';
 import 'package:quitSmoke/theme/app_theme.dart';
+import 'package:quitSmoke/utils/user_preferences.dart';
+import 'package:quitSmoke/utils/smoke_record_manager.dart';
 
 class DailyChart extends StatefulWidget {
   final List<Map<String, dynamic>> smokeRecords;
@@ -15,55 +15,30 @@ class DailyChart extends StatefulWidget {
 }
 
 class _DailyChartState extends State<DailyChart> {
-  BannerAd? _bannerAd;
-
-  bool _isBannerAdLoaded = false;
+  int _profileDailyAverage = 0;
+  int _todaySmokeCount = 0;
 
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
+    _loadProfileAverageAndTodayCount();
   }
 
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: BANNER_ADID,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          setState(() {
-            _isBannerAdLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    );
-    _bannerAd!.load();
-  }
+  Future<void> _loadProfileAverageAndTodayCount() async {
+    final profile = await UserPreferences.getUserProfile();
+    final today = DateTime.now();
+    final todayRecords = widget.smokeRecords.where((record) {
+      final recordDate = DateTime.parse(record['timestamp']);
+      return recordDate.year == today.year &&
+          recordDate.month == today.month &&
+          recordDate.day == today.day;
+    }).toList();
 
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    super.dispose();
-  }
-
-  Widget _buildBannerAd() {
-    if (!_isBannerAdLoaded) return const SizedBox.shrink();
-
-    return Card(
-      color: AppTheme.cardColor,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: _bannerAd!.size.width.toDouble(),
-        height: 72.0,
-        alignment: Alignment.center,
-        child: AdWidget(ad: _bannerAd!),
-      ),
-    );
+    setState(() {
+      _profileDailyAverage = profile?['daily_cigarettes'] ?? 0;
+      _todaySmokeCount =
+          todayRecords.fold(0, (sum, record) => sum + (record['count'] as int));
+    });
   }
 
   @override
@@ -81,7 +56,7 @@ class _DailyChartState extends State<DailyChart> {
         const SizedBox(height: 20),
         _buildComment(todayData, yesterdayData),
         const SizedBox(height: 20),
-        if (_isBannerAdLoaded) _buildBannerAd(),
+        _buildComparisonCard(),
         const SizedBox(height: 20),
         _buildHourlyTable(todayData),
         const SizedBox(height: 20),
@@ -331,5 +306,78 @@ class _DailyChartState extends State<DailyChart> {
         style: const TextStyle(color: AppTheme.textColor, fontSize: 16),
       ),
     );
+  }
+
+  Widget _buildComparisonCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '오늘의 흡연량 비교',
+            style: TextStyle(
+              color: AppTheme.textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildComparisonRow('프로필 일일 평균', _profileDailyAverage),
+          const SizedBox(height: 8),
+          _buildComparisonRow('오늘 흡연량', _todaySmokeCount),
+          const SizedBox(height: 16),
+          Text(
+            _getComparisonComment(),
+            style: const TextStyle(color: AppTheme.textColor, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildComparisonRow(String label, int value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: AppTheme.textColor, fontSize: 16),
+        ),
+        Text(
+          '$value개비',
+          style: const TextStyle(
+            color: AppTheme.primaryColor,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getComparisonComment() {
+    if (_profileDailyAverage == 0) {
+      return '프로필에 일일 평균 흡연량을 설정해 주세요.';
+    }
+
+    final percentChange = _profileDailyAverage > 0
+        ? ((_todaySmokeCount - _profileDailyAverage) /
+                _profileDailyAverage *
+                100)
+            .toStringAsFixed(1)
+        : '0.0';
+
+    if (_todaySmokeCount < _profileDailyAverage) {
+      return '축하합니다! 프로필에 기록된 평균보다 $percentChange% 줄어들었어요. 계속 이대로 가시면 금연 성공할 수 있어요!';
+    } else if (_todaySmokeCount > _profileDailyAverage) {
+      return '프로필에 기록된 평균보다 $percentChange% 증가했어요. 조금 더 노력이 필요해 보입니다. 힘내세요!';
+    } else {
+      return '프로필에 기록된 평균과 일치해요. 더 줄일 수 있도록 노력해 보세요!';
+    }
   }
 }

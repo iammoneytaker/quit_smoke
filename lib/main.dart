@@ -1,26 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:quitSmoke/screens/community_screen.dart';
 import 'package:quitSmoke/screens/home_screen.dart';
 import 'package:quitSmoke/screens/profile_screen.dart';
+import 'package:quitSmoke/screens/savings_screen.dart';
 import 'package:quitSmoke/screens/statistics_screen.dart';
 import 'package:quitSmoke/screens/welcome_screen.dart';
 import 'package:quitSmoke/screens/onboarding_screen.dart';
 import 'package:quitSmoke/theme/app_theme.dart';
 import 'package:quitSmoke/utils/user_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-//TODO: 애플 기기에서 흡연량 다 빼보고 처리 되는지 확인할 것. -> 테스트 플라이트 배포.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await MobileAds.instance.initialize();
-
-  await Supabase.initialize(
-    url: 'https://jszchnsbkfvpczxypimw.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzemNobnNia2Z2cGN6eHlwaW13Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjUwMDc4NjIsImV4cCI6MjA0MDU4Mzg2Mn0.rTB21g-Tsi6Qpu6npI07a_5aGIKcjMBvwSAiwA4vQjA',
-  );
 
   runApp(const MyApp());
 }
@@ -142,15 +131,21 @@ class _MainScreenState extends State<MainScreen> {
     _widgetOptions = <Widget>[
       const HomeScreen(),
       const StatisticsScreen(),
-      const CommunityScreen(),
+      const SavingsScreen(),
       const ProfileScreen(),
     ];
   }
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (index < _widgetOptions.length) {
+      // 인덱스가 리스트 범위 내인지 확인
+      setState(() {
+        _selectedIndex = index;
+      });
+    } else {
+      // 예외 처리: 인덱스가 범위를 벗어났을 때
+      print('Invalid index: $index');
+    }
   }
 
   @override
@@ -173,8 +168,8 @@ class _MainScreenState extends State<MainScreen> {
               label: '통계',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.people),
-              label: '커뮤니티',
+              icon: Icon(Icons.savings),
+              label: '절약비용',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),

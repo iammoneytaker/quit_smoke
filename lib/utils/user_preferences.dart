@@ -1,5 +1,4 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:convert';
 
 import 'package:uuid/uuid.dart';
@@ -12,14 +11,6 @@ class UserPreferences {
   static Future<void> saveUserProfile(Map<String, dynamic> userProfile) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyUserProfile, json.encode(userProfile));
-
-    final userId = await getUserId();
-    final nickname = userProfile['nickname'];
-
-    await Supabase.instance.client.from('users').upsert({
-      'id': userId,
-      'nickname': nickname,
-    });
   }
 
   static Future<Map<String, dynamic>?> getUserProfile() async {
